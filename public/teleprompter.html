@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Folio Inventory — Teleprompter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  :root {
+    /* Orange */
+    --orange-50: #fff7ed; --orange-100: #ffedd5; --orange-500: #f97316; --orange-600: #ea580c; --orange-800: #9a3412;
+    /* Lime */
+    --lime-50: #f7fee7; --lime-500: #84cc16; --lime-600: #65a30d; --lime-700: #4d7c0f;
+    /* Stone (neutral base) */
+    --stone-100: #f5f5f4; --stone-200: #e7e5e4; --stone-300: #d6d3d1;
+    --stone-400: #a8a29e; --stone-500: #78716c; --stone-900: #1c1917;
+
+    --font: 'Be Vietnam Pro', sans-serif;
+    --monospace: 'Monaco', monospace;
+    --xs: 12px; --sm: 14px; --md: 16px; --lg: 19px; --xl: 22px;
+    --radius: 12px; --radius-sm: 6px; --radius-lg: 20px;
+    --gap: 12px; --gap-sm: 8px; --gap-xs: 4px;
+    --gutter: 12px;
+    --control: 48px; --control-pad: 16px;
+    --element-transition: all 0.125s cubic-bezier(0.25, 0, 0, 1);
+
+    --bg: #fff;
+    --panel: var(--stone-100);
+    --heading: var(--stone-900);
+    --text: var(--stone-500);
+    --subtle: var(--stone-400);
+    --border: color-mix(in srgb, var(--stone-500), transparent 87.5%);
+
+    --primary-bg: var(--orange-600);
+    --primary-bg-hover: var(--orange-500);
+    --primary-tint: var(--orange-50);
+    --primary-tint-text: var(--orange-800);
+
+    --green-tint: var(--lime-50);
+    --green-tint-text: var(--lime-700);
+    --orange-tint: var(--orange-50);
+    --orange-tint-text: var(--orange-800);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: var(--md); -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font); color: var(--text); background: var(--bg);
+    line-height: 1.5; height: 100dvh; margin: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden; -webkit-overflow-scrolling: touch;
+  }
+  strong { font-weight: 700; color: var(--heading); }
+  code { font-family: var(--monospace); font-size: var(--sm); background: var(--stone-100); padding: 1px 5px; border-radius: var(--radius-sm); }
+  a { color: var(--orange-600); }
+
+  /* Nav */
+  .nav {
+    background: var(--bg); position: fixed; top: 0; left: 0; right: 0;
+    z-index: 111; box-shadow: 0 0 0 1px var(--border);
+    padding: var(--gap) var(--gutter);
+    display: flex; align-items: center; gap: var(--gap-sm);
+    padding-top: max(var(--gap), env(safe-area-inset-top));
+  }
+  .nav h1 { font-size: var(--sm); font-weight: 600; color: var(--heading); }
+
+  /* Progress */
+  .progress-track {
+    height: 3px; background: var(--stone-100);
+    position: fixed; top: calc(max(var(--gap), env(safe-area-inset-top)) + var(--control) - 4px);
+    left: 0; right: 0; z-index: 112;
+  }
+  .progress-fill { height: 100%; background: var(--primary-bg); transition: width 0.4s ease; }
+
+  /* Badge */
+  .badge {
+    font-size: var(--xs); font-weight: 700;
+    line-height: 24px; min-width: 24px; height: 24px;
+    text-align: center; padding-inline: 6px;
+    border-radius: 100px; display: inline-block; white-space: nowrap;
+  }
+  .badge-tint { background: var(--primary-tint); color: var(--primary-tint-text); }
+  .badge-green { background: var(--green-tint); color: var(--green-tint-text); }
+  .badge-sm { background: var(--stone-100); color: var(--text); }
+
+  /* Card */
+  .card-area {
+    flex: 1; width: 100%;
+    padding: var(--gap-sm) var(--gutter);
+    padding-top: calc(max(var(--gap), env(safe-area-inset-top)) + var(--control) + 3px + var(--gap-sm));
+    margin-bottom: 68px;
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .card {
+    background: var(--panel); border-radius: var(--radius-lg);
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden; min-height: 0;
+  }
+  .card-header {
+    padding: var(--gutter) var(--gutter) 0;
+    display: flex; align-items: baseline; gap: var(--gap-sm); flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .card-header-stacked {
+    flex-direction: column; align-items: flex-start; gap: var(--gap-xs);
+  }
+  .card-header-stacked .card-step-label {
+    font-size: var(--xs); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--subtle);
+  }
+  .card-title { font-size: var(--xl); font-weight: 700; color: var(--heading); }
+  .card-body {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: var(--gap) var(--gutter) var(--gutter);
+    font-size: var(--sm); color: var(--text); line-height: 1.7;
+    min-height: 0;
+  }
+  .card-body::-webkit-scrollbar { width: 4px; }
+  .card-body::-webkit-scrollbar-thumb { background: var(--stone-300); border-radius: 2px; }
+
+  /* Alert blocks — orange for Say, green for Demo + Tip */
+  .alert {
+    display: block; border-radius: var(--radius);
+    padding: var(--gap); margin-bottom: var(--gap);
+    font-size: var(--sm); line-height: 1.7;
+  }
+  .alert-say { background: var(--orange-tint); color: var(--orange-tint-text); }
+  .alert-do { background: var(--green-tint); color: var(--green-tint-text); }
+  .alert-tip { background: var(--green-tint); color: var(--green-tint-text); border: 1px dashed var(--lime-500); }
+  .alert .label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: var(--gap-xs);
+    display: flex; align-items: center; gap: 4px;
+    color: inherit; opacity: 0.7;
+  }
+  .alert .label .icon { font-size: 16px; }
+  .alert p { margin: var(--gap-sm) 0; }
+  .alert p:first-of-type { margin-top: 0; }
+  .alert p:last-child { margin-bottom: 0; }
+  .alert ul, .alert ol { padding-left: 18px; margin: var(--gap-sm) 0; }
+  .alert li { margin-bottom: var(--gap-xs); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: var(--gap) 0; font-size: var(--xs); }
+  th, td { text-align: left; padding: var(--gap-sm); border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; color: var(--heading); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Bottom nav — fixed to bottom */
+  .nav-buttons {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 111;
+    background: var(--bg);
+    box-shadow: 0 -1px 0 var(--border);
+    padding: var(--gap-sm) var(--gutter);
+    padding-bottom: max(var(--gap-sm), env(safe-area-inset-bottom));
+    display: flex; align-items: center; gap: var(--gap-sm);
+  }
+  .button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 0 var(--control-pad);
+    min-height: var(--control); line-height: var(--control);
+    border: none; border-radius: 100px;
+    font-family: var(--font); font-size: var(--sm); font-weight: 600;
+    cursor: pointer; white-space: nowrap; text-decoration: none;
+    background: var(--stone-200); color: var(--heading);
+    transition: var(--element-transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .button:active { transform: scale(0.96); }
+  .button:disabled { opacity: 0.25; cursor: default; transform: none; }
+  .button-primary { background: var(--primary-bg); color: #fff; flex: 1; }
+  .button-primary:active { background: var(--primary-bg-hover); }
+
+  .counter {
+    flex: 1; text-align: center;
+    font-size: var(--xs); font-weight: 600; color: var(--subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dots { display: none; }
+  .key-hint { display: none; }
+
+  /* Icons */
+  .icon {
+    font-family: 'Material Icons';
+    font-weight: normal; font-style: normal;
+    font-size: 24px; line-height: 1;
+    letter-spacing: normal; text-transform: none;
+    display: inline-block; white-space: nowrap;
+    direction: ltr; -webkit-font-smoothing: antialiased;
+    vertical-align: middle;
+  }
+  .icon-sm { font-size: 20px; }
+  .icon-xs { font-size: 16px; }
+
+  /* TOC */
+  .toc { list-style: none; padding: 0; margin: 0; }
+  .toc li {
+    display: flex; align-items: center; gap: var(--gap-sm);
+    padding: 10px var(--gap); margin: 0 calc(var(--gap) * -1);
+    border-radius: var(--radius);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: var(--element-transition);
+  }
+  .toc li:active { background: var(--stone-200); transform: scale(0.98); }
+  @media (min-width: 800px) { .toc li:hover { background: var(--stone-200); } }
+  .toc-num {
+    font-size: var(--xs); font-weight: 700;
+    min-width: 28px; height: 28px; line-height: 28px;
+    text-align: center; border-radius: 100px;
+    background: var(--orange-tint); color: var(--orange-tint-text);
+    flex-shrink: 0;
+  }
+  .toc-num.green { background: var(--green-tint); color: var(--green-tint-text); }
+  .toc-title { font-size: var(--sm); font-weight: 600; color: var(--heading); flex: 1; }
+  .toc-dur { font-size: var(--xs); color: var(--subtle); }
+  .toc-arrow { color: var(--stone-300); display: flex; align-items: center; }
+
+  /* Transition */
+  .card-area.slide-left .card { animation: slideL 0.2s ease; }
+  .card-area.slide-right .card { animation: slideR 0.2s ease; }
+  @keyframes slideL { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  @keyframes slideR { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+
+  /* Desktop */
+  @media (min-width: 800px) {
+    :root { --gap: 16px; --gutter: 20px; --xl: 24px; }
+    .card-area { max-width: 720px; margin: 0 auto; }
+    .nav-buttons { max-width: 720px; margin: 0 auto; left: 0; right: 0; }
+    .card-body { font-size: var(--md); }
+    .dots { display: flex; gap: 6px; align-items: center; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--stone-200); cursor: pointer; transition: var(--element-transition);
+    }
+    .dot.active { background: var(--primary-bg); transform: scale(1.3); }
+    .dot.visited { background: var(--stone-400); }
+    .counter { display: none; }
+    .key-hint { display: block; position: fixed; bottom: 8px; right: 16px; font-size: 11px; color: var(--subtle); }
+    kbd { background: var(--stone-100); padding: 1px 5px; border-radius: 3px; font-family: inherit; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <h1>Folio Inventory Teleprompter</h1>
+  <span style="flex:1"></span>
+  <span class="badge badge-tint" id="progressText">1 / 15</span>
+</div>
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="card-area" id="cardArea">
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-sm" id="cardStep"></span>
+      <span class="card-title" id="cardTitle"></span>
+      <span class="badge badge-green" id="cardDuration" style="margin-left:auto"></span>
+    </div>
+    <div class="card-body" id="cardBody"></div>
+  </div>
+</div>
+
+<div class="nav-buttons">
+  <button class="button" id="prevBtn" onclick="go(-1)"><span class="icon icon-sm">arrow_back</span></button>
+  <span class="counter" id="counter"></span>
+  <div class="dots" id="dotNav"></div>
+  <button class="button button-primary" id="nextBtn" onclick="go(1)">Next <span class="icon icon-sm">arrow_forward</span></button>
+</div>
+
+<div class="key-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate</div>
+
+<script>
+const say = (text) => `<div class="alert alert-say"><span class="label"><span class="icon">record_voice_over</span> Say</span>${text}</div>`;
+const demo = (text) => `<div class="alert alert-do"><span class="label"><span class="icon">touch_app</span> Demo</span>${text}</div>`;
+const tip = (text) => `<div class="alert alert-tip"><span class="label"><span class="icon">lightbulb</span> Tip</span>${text}</div>`;
+
+const steps = [
+  { step: "Part 1", title: "Introduction", dur: "3 min" },
+  { step: "Part 2", title: "Navigating to Inventory", dur: "2 min" },
+  { step: "Part 3", title: "Reviewing Your Locations", dur: "3 min" },
+  { step: "Part 4", title: "Reviewing Your Items", dur: "5 min" },
+  { step: "Part 5", title: "Starting a New Count", dur: "3 min" },
+  { step: "Part 6", title: "Counting Items", dur: "5 min" },
+  { step: "Part 7", title: "Counting with Your Team", dur: "3 min" },
+  { step: "Part 8", title: "Counting Offline", dur: "3 min" },
+  { step: "Part 9", title: "Submitting the Count", dur: "2 min" },
+  { step: "Part 10", title: "Coding & Export", dur: "3 min" },
+  { step: "Part 11", title: "Using Inventory Day-to-Day", dur: "2 min" },
+  { step: "Part 12", title: "Recap", dur: "2 min" },
+  { step: "Bonus", title: "Automated Costing", dur: "5 min", green: true },
+  { step: "Ref", title: "Quick Reference", dur: "" },
+  { step: "Ref", title: "Troubleshooting", dur: "" },
+];
+
+function buildToc() {
+  return `<ul class="toc">${steps.map((s, i) =>
+    `<li onclick="goTo(${i + 1})">
+      <span class="toc-num${s.green ? ' green' : ''}">${i + 1}</span>
+      <span class="toc-title">${s.title}</span>
+      ${s.dur ? `<span class="toc-dur">${s.dur}</span>` : ''}
+      <span class="toc-arrow"><span class="icon icon-sm">chevron_right</span></span>
+    </li>`
+  ).join('')}</ul>`;
+}
+
+const cards = [
+  {
+    step: "Overview", title: "Training Guide", duration: "~35 min",
+    body: buildToc(), isToc: true
+  },
+  {
+    step: "Part 1", title: "Introduction", duration: "3 min",
+    body: say(`
+      <p>"Welcome to Folio Inventory. This tool is designed to cut your count time in half by making it easy to count on any device, split the work across your team, and keep counting even when you lose Wi-Fi — like inside a walk-in cooler.</p>
+      <p>By the end of this session you'll be able to:</p>
+      <ol>
+        <li>Review the locations and items we've imported for you</li>
+        <li>Run a full inventory count</li>
+        <li>Count simultaneously with teammates</li>
+        <li>Work offline and sync when you're back online</li>
+        <li>Submit your count for review and export</li>
+      </ol>
+      <p>And for advanced teams — once you've got a few counts under your belt, you can link your inventory items to products in your Folio catalog. That way pricing flows in automatically and you never have to manually update costs again. We'll cover that at the end as a bonus.</p>
+      <p>Let's get started."</p>
+    `)
+  },
+  {
+    step: "Part 2", title: "Navigating to Inventory", duration: "2 min",
+    body: say(`
+      <p>"From the main Folio navigation, click <strong>Inventory</strong>. You'll see three sections:</p>
+      <ul>
+        <li><strong>Items</strong> — everything you're tracking</li>
+        <li><strong>Locations</strong> — the physical places where you store things</li>
+        <li><strong>Counts</strong> — your count sessions, past and present"</li>
+      </ul>
+    `) + demo(`<p>Show the inventory landing page. Point out the three tabs.</p>`)
+  },
+  {
+    step: "Part 3", title: "Reviewing Your Locations", duration: "3 min",
+    body: say(`<p>"We took your existing count sheets and used AI to translate them into Folio. Your locations and items are already loaded — but AI isn't perfect, so you'll want to make sure everything looks right after our walkthrough today."</p>`)
+    + demo(`
+      <ol>
+        <li>Click the <strong>Locations</strong> tab</li>
+        <li>Walk through the list — these were pulled from your count sheets</li>
+        <li>Check each name makes sense (e.g., <code>Walk-In Cooler 1</code>, <code>Dry Storage</code>)</li>
+        <li>Click into a location to edit if the AI got a name wrong</li>
+        <li>If a location is missing, click <strong>New Location</strong></li>
+      </ol>
+    `)
+    + say(`<p>"You can <strong>archive</strong> locations you no longer use. They won't show up in new counts, but historical counts are preserved."</p>`)
+  },
+  {
+    step: "Part 4", title: "Reviewing Your Items", duration: "5 min",
+    body: say(`<p>"Just like locations, the AI pulled your items from your count sheets. Let's open one and walk through what it set up."</p>`)
+    + demo(`
+      <ol>
+        <li>Click the <strong>Items</strong> tab</li>
+        <li>Scroll through — these are the items the AI imported</li>
+        <li>Click into an item to open the edit modal</li>
+      </ol>
+    `)
+    + say(`<p>"The modal has three sections. Let's check each one in order:"</p>`)
+    + demo(`
+      <p><strong>1. Inventory</strong> (top section)</p>
+      <ul>
+        <li><strong>Pack Size</strong> — how many units come in a case</li>
+        <li><strong>Price</strong> — cost per unit</li>
+        <li><strong>Category</strong> — e.g., <code>Protein</code>, <code>Dairy</code>, <code>Produce</code></li>
+      </ul>
+      <p><strong>2. Location Settings</strong></p>
+      <ul>
+        <li><strong>Active Locations</strong> — where this item lives. An item can be in multiple locations.</li>
+      </ul>
+      <p><strong>3. Count Settings</strong></p>
+      <ul>
+        <li><strong>Par</strong> — target quantity you want on hand</li>
+        <li><strong>Count UOM</strong> — the unit you physically count in (<code>LB</code>, <code>CS</code>, <code>EA</code>)</li>
+        <li><strong>Alternate Count UOM</strong> — optional second unit (e.g., count in cases <em>and</em> individual units)</li>
+        <li><strong>Conversion Factor</strong> — how alternate UOM converts to the primary (e.g., 1 CS = 12 EA)</li>
+      </ul>
+    `)
+    + say(`
+      <p>"The <strong>Count Settings</strong> section is the most important thing to check. If your sheet said 'cases' but the AI set the Count UOM to 'each,' your counts will be off.</p>
+      <p>Take the time to review your items closely before your first count — it's much easier to fix things now than mid-count.</p>
+      <p>One thing to note: on this Items page, everything is listed <strong>alphabetically</strong>. But when you're actually counting, items are organized <strong>sheet to shelf</strong> — matching the order you'd walk through each location. So don't worry if the order here doesn't match your physical layout."</p>
+    `)
+    + demo(`<p>Show search, category filter, and the "Low Inventory" toggle. Edit one item the AI got wrong.</p>`)
+  },
+  {
+    step: "Part 5", title: "Starting a New Count", duration: "3 min",
+    body: say(`<p>"Now for the main event — running an inventory count."</p>`)
+    + demo(`
+      <ol>
+        <li>Click the <strong>Counts</strong> tab</li>
+        <li>Click <strong>New</strong></li>
+        <li>A dialog opens:
+          <ul>
+            <li><strong>Name</strong> — defaults to today's date; rename if you like</li>
+            <li><strong>Locations</strong> — select which locations to include</li>
+          </ul>
+        </li>
+        <li>Click <strong>Create</strong></li>
+      </ol>
+    `)
+    + say(`<p>"Folio drops you straight into the counting screen."</p>`)
+  },
+  {
+    step: "Part 6", title: "Counting Items", duration: "5 min",
+    body: say(`<p>"The count screen is organized by location — each one opens like an accordion."</p>`)
+    + demo(`
+      <ol>
+        <li><strong>Location accordion</strong> — first opens automatically; tap any header to expand/collapse</li>
+        <li><strong>Item rows</strong> show: name, image, <strong>last count</strong>, <strong>par level</strong>, <strong>count field</strong>, and <strong>alternate count</strong></li>
+        <li><strong>Notes</strong> — tap the notes icon to annotate (e.g., <code>Received damaged</code>)</li>
+      </ol>
+    `)
+    + say(`<p>"Just work through each location. Folio saves automatically every time you leave a field — no 'Save' button to forget."</p>`)
+    + demo(`<p>Enter sample counts. Show notes dialog. Show the summary sidebar updating in real time.</p>`)
+    + tip(`<p>"<strong>Drag and drop</strong> locations to reorder them, and items within a location. The order is remembered for this count."</p>`)
+  },
+  {
+    step: "Part 7", title: "Counting with Your Team", duration: "3 min",
+    body: say(`<p>"Multiple people can work on the <strong>same count at the same time</strong>."</p>`)
+    + demo(`
+      <ol>
+        <li>Open the same count on a second device</li>
+        <li>On Device A, enter a count for an item</li>
+        <li>On Device B, watch it appear in real time</li>
+      </ol>
+    `)
+    + say(`<p>"Divide and conquer. One person takes the walk-in, another takes dry storage, a third handles the bar. Everyone sees each other's updates live."</p>`)
+  },
+  {
+    step: "Part 8", title: "Counting Offline", duration: "3 min",
+    body: say(`<p>"Wi-Fi doesn't reach everywhere — walk-in coolers, basements. Folio keeps working offline."</p>`)
+    + demo(`
+      <ol>
+        <li>Go to airplane mode</li>
+        <li>Notice the <strong>offline status bar</strong></li>
+        <li>Keep entering counts — everything works</li>
+        <li>Reconnect — status bar shows <strong>syncing</strong>, then disappears</li>
+      </ol>
+    `)
+    + say(`<p>"If a teammate edited the same item while you were offline, a <strong>merge dialog</strong> lets you pick which value to keep. Nothing is ever lost."</p>`)
+  },
+  {
+    step: "Part 9", title: "Submitting the Count", duration: "2 min",
+    body: say(`<p>"Once every item is counted, it's time to submit."</p>`)
+    + demo(`
+      <ol>
+        <li>Check the <strong>summary sidebar</strong> — percent complete, total value</li>
+        <li>Click <strong>Submit</strong></li>
+        <li>Count moves to <code>Counted</code> — you see a read-only review</li>
+      </ol>
+    `)
+    + say(`<p>"Once submitted, the count is locked. The review page shows who created it, who submitted it, and when."</p>`)
+  },
+  {
+    step: "Part 10", title: "Coding & Export", duration: "3 min",
+    body: say(`<p>"Your finance team can assign accounting codes — the <strong>Coding</strong> step."</p>`)
+    + demo(`
+      <ol>
+        <li>Open a completed count &rarr; <strong>Coding</strong> view</li>
+        <li>Assign <strong>Department</strong>, <strong>GL account</strong>, <strong>Outlet</strong></li>
+        <li>Use <strong>Apply to All</strong> to code a whole location at once</li>
+      </ol>
+    `)
+    + say(`<p>"Export as CSV anytime, or use the Workday XLSX export. Exports include count variance and cost variance."</p>`)
+  },
+  {
+    step: "Part 11", title: "Using Inventory Day-to-Day", duration: "2 min",
+    body: say(`
+      <p>"Between counts, Folio helps you:</p>
+      <ul>
+        <li><strong>Spot low inventory</strong> — 'Low Inventory' filter shows everything below par</li>
+        <li><strong>Track trends</strong> — compare counts month over month</li>
+        <li><strong>Reorder quickly</strong> — items linked to your catalog let you jump to ordering</li>
+      </ul>
+      <p>Turn your count into action — not just a number on a spreadsheet."</p>
+    `)
+  },
+  {
+    step: "Part 12", title: "Recap", duration: "2 min",
+    body: say(`
+      <p>"Let's recap:</p>
+      <ol>
+        <li><strong>Locations</strong> — Review the AI import, fix anything off</li>
+        <li><strong>Items</strong> — Verify names, categories, UOMs, location assignments</li>
+        <li><strong>Counts</strong> — Create a count, select locations, start counting</li>
+        <li><strong>Counting</strong> — Enter quantities by location; Folio auto-saves</li>
+        <li><strong>Multi-user</strong> — Split the work in real time</li>
+        <li><strong>Offline</strong> — Keep counting without Wi-Fi</li>
+        <li><strong>Submit</strong> — Lock in your count</li>
+        <li><strong>Coding & Export</strong> — Accounting codes and CSV/ERP export</li>
+      </ol>
+      <p>Any questions?"</p>
+    `)
+  },
+  {
+    step: "Bonus", title: "Automated Costing", duration: "5 min",
+    body: say(`
+      <p>"If you order through Folio, you can <strong>link inventory items to the products you buy</strong> — Folio pulls the cost automatically.</p>
+      <ul>
+        <li>Case price: <strong>$120</strong></li>
+        <li>Conversion factor: <strong>40</strong> (1 case = 40 lbs)</li>
+        <li>Calculated unit value: <strong>$3.00/lb</strong></li>
+      </ul>
+      <p>Count 50 lbs → Folio values it at <strong>$150</strong>. No manual math."</p>
+    `)
+    + demo(`
+      <ol>
+        <li><strong>Suggestions:</strong> Open an item → see AI-suggested product matches → click <strong>Accept</strong></li>
+        <li><strong>Manual:</strong> From a product page → search for inventory item → set conversion factor → <strong>Save</strong></li>
+      </ol>
+    `)
+    + tip(`
+      <table>
+        <thead><tr><th>You Order</th><th>You Count In</th><th>Factor</th></tr></thead>
+        <tbody>
+          <tr><td>Case of 12 bottles</td><td>EA</td><td>12</td></tr>
+          <tr><td>Case of 40 lb chicken</td><td>LB</td><td>40</td></tr>
+          <tr><td>1 Gallon of milk</td><td>GAL</td><td>1</td></tr>
+          <tr><td>Case of 6 half-gallons</td><td>GAL</td><td>3</td></tr>
+        </tbody>
+      </table>
+    `)
+    + say(`<p>"Link <strong>multiple products</strong> to one item — Folio averages the prices for a blended cost. When catalog prices change, your next count picks it up automatically."</p>`)
+  },
+  {
+    step: "Reference", title: "Quick Reference", duration: "",
+    body: `
+      <table>
+        <thead><tr><th>Task</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td>Add a location</td><td>Inventory &rarr; Locations &rarr; New</td></tr>
+          <tr><td>Add an item</td><td>Inventory &rarr; Items &rarr; New</td></tr>
+          <tr><td>Start a count</td><td>Inventory &rarr; Counts &rarr; New</td></tr>
+          <tr><td>Low-stock items</td><td>Items &rarr; Low Inventory filter</td></tr>
+          <tr><td>Export a count</td><td>Counts &rarr; (select) &rarr; Export</td></tr>
+          <tr><td>Print count sheet</td><td>Open count &rarr; Print button</td></tr>
+          <tr><td>Link item to product</td><td>Items &rarr; (select) &rarr; Accept suggestion</td></tr>
+        </tbody>
+      </table>
+    `
+  },
+  {
+    step: "Reference", title: "Troubleshooting", duration: "",
+    body: `
+      <table>
+        <thead><tr><th>Issue</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td>Can't see Inventory</td><td>Check your store has an active subscription</td></tr>
+          <tr><td>Offline bar stuck</td><td>Check Wi-Fi; try refreshing</td></tr>
+          <tr><td>Merge dialog appeared</td><td>A teammate edited the same item offline — pick which value to keep</td></tr>
+          <tr><td>Counts not saving</td><td>Tap out of the field — Folio saves on blur</td></tr>
+          <tr><td>Fix a submitted count</td><td>Submitted counts are locked — create a new one</td></tr>
+        </tbody>
+      </table>
+    `
+  }
+];
+
+let current = 0;
+
+function render(dir) {
+  const c = cards[current], area = document.getElementById('cardArea');
+  if (dir) { area.className = 'card-area'; void area.offsetWidth; area.className = 'card-area ' + (dir > 0 ? 'slide-left' : 'slide-right'); }
+  const header = document.querySelector('.card-header');
+  if (c.isToc) {
+    header.className = 'card-header card-header-stacked';
+    header.innerHTML = `<span class="card-step-label">${c.step}</span>
+      <span class="card-title">${c.title}</span>
+      <span class="badge badge-green" id="cardDuration">${c.duration}</span>`;
+  } else {
+    header.className = 'card-header';
+    header.innerHTML = `<span class="badge badge-sm" id="cardStep">${c.step}</span>
+      <span class="card-title">${c.title}</span>
+      <span class="badge badge-green" id="cardDuration" style="${c.duration ? '' : 'display:none'}">${c.duration || ''}</span>`;
+  }
+  document.getElementById('cardBody').innerHTML = c.body;
+  document.getElementById('cardBody').scrollTop = 0;
+  const isToc = current === 0;
+  const stepNum = current;
+  const totalSteps = cards.length - 1;
+  const pct = isToc ? 0 : (stepNum / totalSteps) * 100;
+  document.getElementById('progressText').textContent = isToc ? 'Overview' : `${stepNum} / ${totalSteps}`;
+  document.getElementById('progressFill').style.width = `${pct}%`;
+  document.getElementById('counter').textContent = isToc ? 'Overview' : `${stepNum} of ${totalSteps}`;
+  const prev = document.getElementById('prevBtn');
+  prev.disabled = isToc;
+  prev.innerHTML = current === 1 ? '<span class="icon icon-sm">menu</span>' : '<span class="icon icon-sm">arrow_back</span>';
+  if (current === 1) prev.onclick = () => goTo(0); else prev.onclick = () => go(-1);
+  const next = document.getElementById('nextBtn');
+  next.disabled = current === cards.length - 1;
+  next.innerHTML = current === cards.length - 1
+    ? '<span class="icon icon-sm">check</span> Done'
+    : 'Next <span class="icon icon-sm">arrow_forward</span>';
+  const dots = document.getElementById('dotNav');
+  dots.innerHTML = '';
+  cards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === current ? ' active' : i < current ? ' visited' : '');
+    d.onclick = () => { const dir = i > current ? 1 : -1; current = i; render(dir); };
+    dots.appendChild(d);
+  });
+}
+
+function go(dir) {
+  const n = current + dir;
+  if (n < 0 || n >= cards.length) return;
+  current = n; render(dir);
+}
+
+function goTo(i) {
+  const dir = i > current ? 1 : -1;
+  current = i; render(dir);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(-1); }
+});
+
+let tx = 0;
+document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => { const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 60) go(dx < 0 ? 1 : -1); });
+
+render();
+</script>
+</body>
+</html>
